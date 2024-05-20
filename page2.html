@@ -51,28 +51,92 @@
         a:hover {
             text-decoration: underline;
         }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>Welcome to My Webpage</h1>
+    <h1>Commands</h1>
 </header>
 
 <main>
-    <h2>About This Page</h2>
-    <p>This is a simple webpage designed to demonstrate how to format text content with HTML and CSS. Below you will find a list of some key features that make this page look clean and professional.</p>
-
-    <h2>Features</h2>
+    <h2>Introduction</h2>
+    <p>NetBSD, being a UNIX based operating system has many commands that are also available in Linux.
+    Commands such as:
     <ul>
-        <li>Semantic HTML elements for better structure and accessibility.</li>
-        <li>Responsive design to ensure the page looks good on all devices.</li>
-        <li>Consistent and visually appealing color scheme.</li>
-        <li>Readable fonts and appropriate text spacing.</li>
-        <li>Links that change appearance when hovered over.</li>
+        <li>ls: list files</li>
+        <li>cd: change directory</li>
+        <li>pwd: present working directory</li>
+        <li>cat: concatenate files and print on standard output</li>
+        <li>cp: copy files and directories</li>
     </ul>
+    are common in many UNIX based systems. Given below are some unique commands that are usually only found in 
+    NetBSD operating systems.
+    </p>
 
-    <p>For more information on HTML and CSS, visit the <a href="https://developer.mozilla.org/en-US/docs/Learn">MDN Web Docs</a>.</p>
+    <h2>Unique Commands</h2>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Command Name</th>
+                <th>Description</th>
+                <th>Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>pkg_add</td>
+                <td>Add a binary package</td>
+                <td><pre><code>pkg_add <i>binary_package.tgz</i></code></pre></td>
+            </tr>
+            <tr>
+                <td>pkg_info</td>
+                <td>List all installed packages</td>
+                <td><pre><code>pkg_info</code></pre></td>
+            </tr>
+            <tr>
+                <td>pkg_delete</td>
+                <td>Delete the package</td>
+                <td><pre><code>pkg_delete <i>the_package_name</i></code></pre></td>
+            </tr>
+            <tr>
+                <td>pkg_tarup</td>
+                <td>Create a binary package file from an already installed package</td>
+                <td><pre><code>pkg_tarup <i>the_package_name</i></code></pre></td>
+            </tr>
+            <tr>
+                <td>wsconsctl</td>
+                <td>Get or set wscons state</td>
+                <td><pre><code>wsconsctl</code></pre></td>
+            </tr>
+            <tr>
+                <td>pkgin</td>
+                <td>A system information variables</td>
+                <td><pre><code>pkgin search <i>the_package_name\</i>></code></pre></td>
+            </tr>
+        </tbody>
+    </table>
 </main>
 
 </body>
