@@ -52,27 +52,192 @@
             text-decoration: underline;
         }
     </style>
+    <link rel="stylesheet" href="./prism.css" data-noprefix>
+    <script src="./prism.js"></script>
+    <script>
+        Prism.plugins.NormalizeWhitespace.setDefaults({
+            'remove-trailing': true,
+            'remove-indent': true,
+            'left-trim': true,
+            'right-trim': true,
+            'break-lines': 60, //max number of characters in each line before break
+});
+    </script>
 </head>
 <body>
 
 <header>
-    <h1>Welcome to My Webpage</h1>
+    <h1>Process Synchronization</h1>
 </header>
 
 <main>
-    <h2>About This Page</h2>
-    <p>This is a simple webpage designed to demonstrate how to format text content with HTML and CSS. Below you will find a list of some key features that make this page look clean and professional.</p>
+    <h2>Process Synchronization</h2>
+    <p>This web page poses a process synchronization problem and demonstrates a solution as well</p>
 
-    <h2>Features</h2>
+    <h2>Problem</h2>
     <ul>
-        <li>Semantic HTML elements for better structure and accessibility.</li>
-        <li>Responsive design to ensure the page looks good on all devices.</li>
-        <li>Consistent and visually appealing color scheme.</li>
-        <li>Readable fonts and appropriate text spacing.</li>
-        <li>Links that change appearance when hovered over.</li>
+        <li>There are 3 industries, and 3 resources</li>
+        <li>Each industry requires a different set of resources to manufacture its products</li>
+        <li>There is a table common to all industries where resources are placed every turn</li>
+        <li>Industries may pick resources and use them to manufacture</li>
+        <li>Each resources must be used only by 1 industry in a turn</li>
     </ul>
 
-    <p>For more information on HTML and CSS, visit the <a href="https://developer.mozilla.org/en-US/docs/Learn">MDN Web Docs</a>.</p>
+    <h2>Solution</h2>
+    <ul>
+        <li>Solution involves 2 condition variables and 1 mutex</li>
+        <li> table_cond and table_mutex, to indicate when table has been set
+            and can be accessed by industries
+        </li>
+        <li>
+            done_cond to indicate when each industry is done with checking the table
+        </li>
+        <li>
+            Each industry's algorithm is as follows:
+            <ol>
+                <li>cond_wait(table_cond, table_mutex)</li>
+                <li>Check table, if it has adequate resources, remove from 
+                    and manufacture
+                </li>
+                <li>Increment done count and signal done_cond</li>
+                <li> Repeat till enough units manufactured, then decrement alive_count</li>
+            </ol>
+        </li>
+        <li>
+            Producer's algorithm is as follows:
+            <ol>
+                <li>Lock the table mutex.</li>
+                <li>Place an item on the table</li>
+                <li>Wait for done_cond while done_count &lt; alive_count</li>
+                <li>Repeat</li>
+            </ol>
+        </li>
+
+    </ul>
+
+    <h2>Code</h2>
+    <pre><code class="language-clike">
+
+        #include &lt;pthread.h&gt;
+        #include &lt;stdio.h&gt;
+        #include &lt;stdlib.h&gt;
+        #include &lt;string.h&gt;
+        
+        typedef unsigned char resource_t;
+        
+        pthread_cond_t table_cond = PTHREAD_COND_INITIALIZER;
+        pthread_mutex_t table_mutex = PTHREAD_MUTEX_INITIALIZER;
+        pthread_cond_t done_cond = PTHREAD_COND_INITIALIZER;
+        int done_count = 0;
+        int alive_count = 3;
+        
+        resource_t table;
+        
+        #define RESRC_A 1
+        #define RESRC_B (1&lt;&lt;1)
+        #define RESRC_C (1&lt;&lt;2)
+        
+        void print_resource_set(resource_t res, char* buf) {
+        &nbsp;&nbsp; &nbsp;buf[0] = &#039;\0&#039;;
+        &nbsp;&nbsp; &nbsp;if (res &amp; RESRC_A) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;strcat(buf, &quot; RESRC_A&quot;);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;if (res &amp; RESRC_B) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;strcat(buf, &quot; RESRC_B&quot;);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;if (res &amp; RESRC_C) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;strcat(buf, &quot; RESRC_C&quot;);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;strcat(buf, &quot; &quot;);
+        }
+        
+        struct factory_details {
+        &nbsp;&nbsp; &nbsp;int id;
+        &nbsp;&nbsp; &nbsp;resource_t has;
+        &nbsp;&nbsp; &nbsp;resource_t needs;
+        &nbsp;&nbsp; &nbsp;int times;
+        };
+        
+        void * factory(struct factory_details* fd) {
+        &nbsp;&nbsp; &nbsp;int ret;
+        &nbsp;&nbsp; &nbsp;char has_str[50];
+        &nbsp;&nbsp; &nbsp;char needs_str[50];
+        &nbsp;&nbsp; &nbsp;print_resource_set(fd-&gt;has, has_str);
+        &nbsp;&nbsp; &nbsp;print_resource_set(fd-&gt;needs, needs_str);
+        &nbsp;&nbsp; &nbsp;printf(&quot;Factord %d has %s needs %s\n&quot;, fd-&gt;id, has_str, needs_str);
+        &nbsp;&nbsp; &nbsp;done_count++;
+        &nbsp;&nbsp; &nbsp;pthread_mutex_lock(&amp;table_mutex);
+        &nbsp;&nbsp; &nbsp;pthread_cond_signal(&amp;done_cond); &nbsp; &nbsp;
+        &nbsp;&nbsp; &nbsp;while (fd-&gt;times &gt; 0) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_wait(&amp;table_cond, &amp;table_mutex);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;if (((table | fd-&gt;has) &amp; fd-&gt;needs) == fd-&gt;needs) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;printf(&quot;Factory %d is working\n&quot;, fd-&gt;id);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;fd-&gt;times --;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;printf(&quot;Factory %d checked\n&quot;, fd-&gt;id);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;done_count++;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_signal(&amp;done_cond);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;alive_count--;
+        &nbsp;&nbsp; &nbsp;pthread_mutex_unlock(&amp;table_mutex);
+        &nbsp;&nbsp; &nbsp;pthread_cond_signal(&amp;done_cond);
+        &nbsp;&nbsp; &nbsp;printf(&quot;Factord %d is done\n&quot;, fd-&gt;id);
+        }
+        
+        struct factory_details fds[3] = {
+        &nbsp;&nbsp; &nbsp;{0, RESRC_A, RESRC_A|RESRC_B, 3},
+        &nbsp;&nbsp; &nbsp;{1, RESRC_B, RESRC_B|RESRC_C, 5},
+        &nbsp;&nbsp; &nbsp;{2, RESRC_C, RESRC_C|RESRC_A, 1}
+        };
+        
+        void *supplier(void* ign) {
+        &nbsp;&nbsp; &nbsp;srand(time(NULL));
+        &nbsp;&nbsp; &nbsp;char buf[50];
+        &nbsp;&nbsp; &nbsp;pthread_mutex_lock(&amp;table_mutex);
+        &nbsp;&nbsp; &nbsp;while (done_count &lt; alive_count &amp;&amp; alive_count &gt; 0) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_wait(&amp;done_cond, &amp;table_mutex);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;while (alive_count &gt; 0) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;table = 0;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;if (rand()%2) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;table |= RESRC_A;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;if (rand()%2) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;table |= RESRC_B;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;if (rand()%2) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;table |= RESRC_C;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;print_resource_set(table, buf);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;printf(&quot;Setting the table with %s\n&quot;, buf);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;done_count = 0;
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_signal(&amp;table_cond);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;while (done_count &lt; alive_count &amp;&amp; alive_count &gt; 0) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;printf(&quot;Done: %d Alive: %d\n&quot;, done_count, alive_count);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_wait(&amp;done_cond, &amp;table_mutex);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;pthread_cond_signal(&amp;table_cond);
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;printf(&quot;Done: %d Alive: %d\n&quot;, done_count, alive_count);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;printf(&quot;DONE\n&quot;);
+        }
+        
+        int main() {
+        &nbsp;&nbsp; &nbsp;pthread_t fts[3];
+        &nbsp;&nbsp; &nbsp;pthread_t supt;
+        
+        &nbsp;&nbsp; &nbsp;for (int i = 0; i &lt; 3; i++) {
+        &nbsp;&nbsp; &nbsp; &nbsp; &nbsp;pthread_create(&amp;fts[i], NULL, (void* (*) (void*)) factory, &amp;fds[i]);
+        &nbsp;&nbsp; &nbsp;}
+        &nbsp;&nbsp; &nbsp;pthread_create(&amp;supt, NULL, supplier, NULL);
+        &nbsp;&nbsp; &nbsp;pthread_join(supt, NULL);
+        &nbsp;&nbsp; &nbsp;return 0;
+        }
+        
+
+    </code></pre>
+    <h2>Output</h2>
+    <img src="./proc_sync.png">
 </main>
 
 </body>

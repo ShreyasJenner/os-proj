@@ -1,0 +1,129 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formatted Text Content</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        header {
+            background: #35424a;
+            color: #ffffff;
+            padding: 20px 0;
+            text-align: center;
+        }
+        header h1 {
+            margin: 0;
+        }
+        main {
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        h2 {
+            color: #35424a;
+        }
+        p {
+            margin-bottom: 20px;
+        }
+        ul {
+            list-style-type: disc;
+            margin: 0 0 20px 20px;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: #35424a;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #dddddd;
+            padding: 8px;
+            text-align: left;
+            vertical-align: top;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        pre {
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            background-color: #f4f4f4;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Scheduling Algorithms</h1>
+</header>
+
+<main>
+    <h2>Introduction</h2>
+    <p>NetBSD, being a POSIX based OS, has 3 different scheduling algorithms which are
+        required to be supported by POSIX standards
+    <ul>
+        <li><b>SCHED_FIFO</b> - first in first out or first come first serve</li>
+        <li><b>SCHED_RR</b> - round-robin </li>
+        <li><b>SCHED_OTHER</b> - time-sharing scheduling policy</li>
+    </ul>
+    Currently, during compilation, one of 2 schedulers can be chosen.
+    The 4.4BSD scheduler, or the modern M2 Scheduler.
+    The scheduling information can be obtained and manipulated with:
+    <ul>
+        <li><pre>schedctl -p [PID]</pre> gets scheduling info </li>
+        <li><pre>schedctl -C SCHED_FIFO [command]</pre> calls command with
+        policy FIFO</li>
+    </ul>
+    </p>
+
+
+    
+    <h2>Differences between the algorithms</h2>
+
+    <p>
+        Threads running with the SCHED_FIFO policy have a fixed priority, i.e. the kernel does not change 
+        their priority dynamically. A SCHED_FIFO thread runs until
+    </p>
+    <ul>
+        <li>completion</li>
+        <li>voluntarily yielding the CPU</li>
+        <li>blocking on an I/O operation or other resources (memory allocation, locks)</li>
+        <li>preemption by a higher priority thread</li>
+    </ul>
+    <p>SCHED_RR works similar to SCHED_FIFO, except that such threads 
+        have a default time-slice of 100ms.
+    </p>
+    <p>
+        For the SCHED_OTHER policy, both schedulers currently use the same run queue implementation, employing multi-level feedback queues. By dynamically adjusting a thread's priority to reflect its CPU and resource utilization, this approach allows the system to be responsive even under heavy loads.
+
+Each runnable thread is placed on one of the runqueues, 
+according to its priority. Each thread is allowed to run on the CPU for a certain amount of time, its time-slice or quantum. Once the thread has used up its time-slice, it is placed on the back on its runqueue. When the scheduler searches for a new thread 
+to run on the CPU, the first thread of the highest priority, non-empty runqueue is selected.
+    </p>
+</main>
+
+</body>
+</html>
+

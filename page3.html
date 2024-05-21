@@ -51,28 +51,84 @@
         a:hover {
             text-decoration: underline;
         }
+        .code {
+            font-family: 'Courier New', Courier, monospace;
+        }
     </style>
+    <link rel="stylesheet" href="./prism.css" data-noprefix>
+    <script src="./prism.js"></script>
+    <script>
+        Prism.plugins.NormalizeWhitespace.setDefaults({
+            'remove-trailing': true,
+            'remove-indent': true,
+            'left-trim': true,
+            'right-trim': true,
+            'break-lines': 60, //max number of characters in each line before break
+});
+    </script>
 </head>
 <body>
 
 <header>
-    <h1>Welcome to My Webpage</h1>
+    <h1>NetBSD</h1>
 </header>
 
 <main>
-    <h2>About This Page</h2>
-    <p>This is a simple webpage designed to demonstrate how to format text content with HTML and CSS. Below you will find a list of some key features that make this page look clean and professional.</p>
+    <h2>Syscalls in NetBSD</h2>
+    <p>Since NetBSD is a POSIX compliant OS, most of the syscalls are similar to the syscalls in Linux
+        and other POSIX compliant OSes.
+    </p>
 
-    <h2>Features</h2>
+    <h2>Syscalls</h2>
     <ul>
-        <li>Semantic HTML elements for better structure and accessibility.</li>
-        <li>Responsive design to ensure the page looks good on all devices.</li>
-        <li>Consistent and visually appealing color scheme.</li>
-        <li>Readable fonts and appropriate text spacing.</li>
-        <li>Links that change appearance when hovered over.</li>
+        <li><span class="code">open(path, flags)</span>
+            <p>Used to get a file description for the file at path, with flags such as RDONLY, WRONLY, etc.</p>
+        </li>
+        <li><span class="code">close(fd)</span>
+            <p> Closes the given file descriptor </p>
+        </li>
+        <li><span class="code">write(fd, buf, buflen)</span>
+            <p> Writes the given number of characters into file descriptor fd </p>
+        </li>
+        <li><span class="code">read(fd, buf, buflen)</span>
+            <p> Read upto buflen characters from file descriptor fd </p>
+        </li>
     </ul>
 
-    <p>For more information on HTML and CSS, visit the <a href="https://developer.mozilla.org/en-US/docs/Learn">MDN Web Docs</a>.</p>
+    <h2> Sample code </h2>
+    <p> The following code is a program to print the contents of a file passed as an argument</p>
+    <pre>
+    <code class="language-clike">
+    #include &lt;fcntl.h&gt;
+    #include &lt;errno.h&gt;
+    #include &lt;stdio.h&gt;
+    #include &lt;unistd.h&gt;
+        
+    int main(int argc, char** argv) {
+        // To print a file to stdout
+        int fd = open(argv[1], O_RDONLY);
+        char buf[300];
+    
+        if (fd &lt; 0) {
+            printf("errno: %d\n", errno);
+            perror("Failed in opening file");
+            return -1;
+        }
+    
+        ssize_t ret = read(fd, buf, sizeof(buf));
+        ssize_t size = ret;
+        write(0, buf, ret);
+        while (ret == sizeof(buf)) {
+            ret = read(fd, buf, sizeof(buf));
+            write(0, buf, ret);
+            size += ret;
+        }
+        printf("\nSize is %ld\n", size);
+        return 0;
+    }
+    </code></pre>
+    <h3> Output </h3>
+    <img src="./netbsd_syscalls.png">
 </main>
 
 </body>
